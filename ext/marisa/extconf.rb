@@ -1,21 +1,24 @@
 require "mkmf"
 require "fileutils"
 
-ROOT = File.expand_path(__dir__)
-VENDOR = File.join(ROOT, "vendor", "marisa-trie")
-BUILD  = File.join(ROOT, "build")
+root = File.expand_path(__dir__)
+vendor = File.join(root, "vendor", "marisa-trie")
+build  = File.join(root, "build")
 
-FileUtils.mkdir_p BUILD
-Dir.chdir(BUILD) do
-  system("cmake", VENDOR,
-    "-DBUILD_SHARED_LIBS=OFF",
-    "-DCMAKE_POSITION_INDEPENDENT_CODE=ON"
+FileUtils.mkdir_p(build)
+
+Dir.chdir(build) do
+  system(
+    "cmake",
+    vendor,
+    "-DCMAKE_BUILD_TYPE=Release",
+    "-DBUILD_SHARED_LIBS=OFF"
   ) or abort "cmake failed"
 
-  system("make") or abort "make failed"
+  system("cmake --build .") or abort "cmake build failed"
 end
 
-$INCFLAGS << " -I#{VENDOR}/include"
-$LDFLAGS  << " #{BUILD}/libmarisa.a"
+$CXXFLAGS << " -std=c++17"
+$LDFLAGS  << " #{build}/libmarisa.a"
 
-create_makefile("marisa")
+create_makefile("marisa/marisa")
