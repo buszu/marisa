@@ -1,0 +1,3 @@
+[submodule "ext/marisa/vendor/marisa-trie"]
+	path = ext/marisa/vendor/marisa-trie
+	url = https://github.com/s-yata/marisa-trie
