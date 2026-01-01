@@ -29,6 +29,7 @@ end
 # --------------------------------------------------
 
 ROOT   = File.expand_path(__dir__)
+puts "\n\nRoot: ---> #{ROOT}\n\n"
 VENDOR = File.join(ROOT, "vendor", "marisa-trie")
 BUILD  = File.join(ROOT, "build")
 
