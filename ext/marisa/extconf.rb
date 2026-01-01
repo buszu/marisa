@@ -29,9 +29,11 @@ end
 # --------------------------------------------------
 
 ROOT   = File.expand_path(__dir__)
-puts "\n\nRoot: ---> #{ROOT}\n\n"
 VENDOR = File.join(ROOT, "vendor", "marisa-trie")
 BUILD  = File.join(ROOT, "build")
+
+BINDINGS = File.join(VENDOR, "bindings")
+BINDINGS_RUBY = File.join(BINDINGS, "ruby")
 
 abort_with "marisa-trie not vendored" unless
   File.exist?(File.join(VENDOR, "CMakeLists.txt"))
@@ -40,15 +42,16 @@ abort_with "marisa-trie not vendored" unless
 # SWIG (generate wrapper if missing)
 # --------------------------------------------------
 
-wrap = File.join(ROOT, "marisa-swig_wrap.cxx")
+wrap = File.join(BINDINGS_RUBY, "marisa-swig_wrap.cxx")
 
 unless File.exist?(wrap)
-  Dir.chdir(ROOT) do
+  Dir.chdir(BINDINGS) do
     run!(
       "swig",
       "-Wall",
       "-c++",
       "-ruby",
+      "-outdir ruby",
       "marisa-swig.i"
     )
   end
