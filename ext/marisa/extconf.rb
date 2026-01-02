@@ -83,6 +83,7 @@ end
 
 # headers
 $INCFLAGS << " -I#{VENDOR}/include"
+$INCFLAGS << " -I#{VENDOR}/bindings/ruby"
 
 # static library
 libmarisa = File.join(BUILD, "libmarisa.a")
