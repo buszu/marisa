@@ -32,6 +32,8 @@ ROOT   = File.expand_path(__dir__)
 VENDOR = File.join(ROOT, "vendor", "marisa-trie")
 BUILD  = File.join(ROOT, "build")
 
+BINDINGS = File.join(VENDOR, "bindings")
+
 abort_with "marisa-trie not vendored" unless
   File.exist?(File.join(VENDOR, "CMakeLists.txt"))
 
@@ -41,13 +43,12 @@ abort_with "marisa-trie not vendored" unless
 
 wrap = File.join(ROOT, "marisa-swig_wrap.cxx")
 unless File.exist?(wrap)
-  Dir.chdir(ROOT) do
+  Dir.chdir(BINDINGS) do
     run!(
       "swig",
       "-Wall",
       "-c++",
       "-ruby",
-      "-outdir ruby",
       "marisa-swig.i"
     )
   end
@@ -83,6 +84,7 @@ end
 
 # headers
 $INCFLAGS << " -I#{VENDOR}/include"
+$INCFLAGS << " -I#{VENDOR}/bindings"
 $INCFLAGS << " -I#{VENDOR}/bindings/ruby"
 
 # static library
