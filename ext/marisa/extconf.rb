@@ -99,4 +99,4 @@ $CXXFLAGS << " -std=c++17"
 # generate Ruby Makefile
 # --------------------------------------------------
 
-create_makefile("marisa/marisa")
+create_makefile("marisa")
