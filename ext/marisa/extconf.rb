@@ -39,8 +39,7 @@ abort_with "marisa-trie not vendored" unless
 # SWIG (generate wrapper if missing)
 # --------------------------------------------------
 
-wrap = File.join(BINDINGS_RUBY, "marisa-swig_wrap.cxx")
-
+wrap = File.join(ROOT, "marisa-swig_wrap.cxx")
 unless File.exist?(wrap)
   Dir.chdir(ROOT) do
     run!(
