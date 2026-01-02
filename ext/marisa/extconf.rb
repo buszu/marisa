@@ -3,10 +3,6 @@
 require "mkmf"
 require "fileutils"
 
-# --------------------------------------------------
-# helpers
-# --------------------------------------------------
-
 def abort_with(msg)
   abort "\n*** marisa extconf error ***\n#{msg}\n"
 end
@@ -17,10 +13,10 @@ def run!(*cmd)
 end
 
 # --------------------------------------------------
-# toolchain checks
+# tools
 # --------------------------------------------------
 
-%w[cmake make swig].each do |tool|
+%w[cmake make].each do |tool|
   find_executable(tool) or abort_with("#{tool} not found in PATH")
 end
 
@@ -32,30 +28,11 @@ ROOT   = File.expand_path(__dir__)
 VENDOR = File.join(ROOT, "vendor", "marisa-trie")
 BUILD  = File.join(ROOT, "build")
 
-BINDINGS = File.join(VENDOR, "bindings")
-
-abort_with "marisa-trie not vendored" unless
+abort_with "marisa-trie not found" unless
   File.exist?(File.join(VENDOR, "CMakeLists.txt"))
 
 # --------------------------------------------------
-# SWIG (generate wrapper if missing)
-# --------------------------------------------------
-
-wrap = File.join(ROOT, "marisa-swig_wrap.cxx")
-unless File.exist?(wrap)
-  Dir.chdir(BINDINGS) do
-    run!(
-      "swig",
-      "-Wall",
-      "-c++",
-      "-ruby",
-      "marisa-swig.i"
-    )
-  end
-end
-
-# --------------------------------------------------
-# build marisa-trie (C++)
+# build libmarisa (static)
 # --------------------------------------------------
 
 FileUtils.mkdir_p(BUILD)
@@ -78,29 +55,21 @@ Dir.chdir(BUILD) do
   )
 end
 
-# --------------------------------------------------
-# mkmf config (Ruby extension)
-# --------------------------------------------------
-
-# headers
-$INCFLAGS << " -I#{VENDOR}/include"
-$INCFLAGS << " -I#{VENDOR}/bindings"
-$INCFLAGS << " -I#{VENDOR}/bindings/ruby"
-
-# static library
 libmarisa = File.join(BUILD, "libmarisa.a")
-abort_with "libmarisa.a not found" unless File.exist?(libmarisa)
+abort_with "libmarisa.a not built" unless File.exist?(libmarisa)
 
-$LDFLAGS << " #{libmarisa}"
+# --------------------------------------------------
+# export flags for Ruby extension
+# --------------------------------------------------
 
-# C++
-CONFIG["CXX"] ||= "c++"
+$INCFLAGS << " -I#{VENDOR}/include"
+$LDFLAGS  << " #{libmarisa}"
 $CXXFLAGS << " -std=c++17"
 
 # --------------------------------------------------
-# generate Ruby Makefile
+# delegate to original Ruby bindings
 # --------------------------------------------------
 
-have_library("marisa")
-
-create_makefile("marisa")
+Dir.chdir(File.join(VENDOR, "bindings", "ruby")) do
+  load "extconf.rb"
+end
