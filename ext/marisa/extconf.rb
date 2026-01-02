@@ -38,7 +38,6 @@ bindings = File.join(VENDOR, "bindings")
 ruby_bindings = File.join(bindings, "ruby")
 
 wrap = File.join(ruby_bindings, "marisa-swig_wrap.cxx")
-
 unless File.exist?(wrap)
   Dir.chdir(bindings) do
     system(
@@ -50,6 +49,9 @@ unless File.exist?(wrap)
     ) or abort "swig failed"
   end
 end
+
+wrap_dst = File.join(ROOT, "marisa-swig_wrap.cxx")
+FileUtils.cp(wrap, wrap_dst)
 
 # --------------------------------------------------
 # 3. mkmf config (THIS IS THE KEY PART)
