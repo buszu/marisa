@@ -53,6 +53,16 @@ end
 wrap_dst = File.join(ROOT, "marisa-swig_wrap.cxx")
 FileUtils.cp(wrap, wrap_dst)
 
+%w[
+  marisa-swig.cxx
+  marisa-swig.h
+].each do |file|
+  src = File.join(ruby_bindings, file)
+  dst = File.join(ROOT, file)
+  abort "#{file} not found" unless File.exist?(src)
+  FileUtils.cp(src, dst)
+end
+
 # --------------------------------------------------
 # 3. mkmf config (THIS IS THE KEY PART)
 # --------------------------------------------------
