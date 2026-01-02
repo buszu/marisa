@@ -101,4 +101,6 @@ $CXXFLAGS << " -std=c++17"
 # generate Ruby Makefile
 # --------------------------------------------------
 
+have_library("marisa")
+
 create_makefile("marisa")
