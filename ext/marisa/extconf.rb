@@ -1,54 +1,70 @@
 # ext/marisa/extconf.rb
+require "mkmf"
 require "fileutils"
-require "rbconfig"
 
 ROOT   = File.expand_path(__dir__)
 VENDOR = File.join(ROOT, "vendor", "marisa-trie")
-RUBY_BINDINGS = File.join(VENDOR, "bindings", "ruby")
+BUILD  = File.join(ROOT, "build")
 
-abort "marisa-trie not vendored" unless File.exist?(RUBY_BINDINGS)
+abort "marisa-trie not vendored" unless
+  File.exist?(File.join(VENDOR, "CMakeLists.txt"))
 
 # --------------------------------------------------
-# 1. build marisa-trie (C++)
+# 1. build marisa-trie (static lib)
 # --------------------------------------------------
 
-build_dir = File.join(ROOT, "build")
-FileUtils.mkdir_p(build_dir)
+FileUtils.mkdir_p(BUILD)
 
-Dir.chdir(build_dir) do
-  system("cmake", VENDOR, "-DCMAKE_BUILD_TYPE=Release") or abort "cmake failed"
+Dir.chdir(BUILD) do
+  system(
+    "cmake",
+    VENDOR,
+    "-DCMAKE_BUILD_TYPE=Release",
+    "-DBUILD_SHARED_LIBS=OFF",
+    "-DCMAKE_POSITION_INDEPENDENT_CODE=ON"
+  ) or abort "cmake configure failed"
+
   system("cmake", "--build", ".") or abort "cmake build failed"
 end
 
+libmarisa = File.join(BUILD, "libmarisa.a")
+abort "libmarisa.a not found" unless File.exist?(libmarisa)
+
 # --------------------------------------------------
-# 2. build ruby bindings (upstream)
+# 2. SWIG wrapper (Ruby)
 # --------------------------------------------------
 
-Dir.chdir(RUBY_BINDINGS) do
-  system(RbConfig.ruby, "extconf.rb") or abort "vendor extconf failed"
-  system("make") or abort "vendor make failed"
+bindings = File.join(VENDOR, "bindings")
+ruby_bindings = File.join(bindings, "ruby")
+
+wrap = File.join(ruby_bindings, "marisa-swig_wrap.cxx")
+
+unless File.exist?(wrap)
+  Dir.chdir(bindings) do
+    system(
+      "swig",
+      "-c++",
+      "-ruby",
+      "-outdir", ruby_bindings,
+      "marisa-swig.i"
+    ) or abort "swig failed"
+  end
 end
 
 # --------------------------------------------------
-# 3. copy compiled extension
+# 3. mkmf config (THIS IS THE KEY PART)
 # --------------------------------------------------
 
-dlext = RbConfig::CONFIG["DLEXT"]
-bundle = Dir[File.join(RUBY_BINDINGS, "*.#{dlext}")].first or
-  abort "compiled extension not found"
+$INCFLAGS << " -I#{VENDOR}/include"
+$INCFLAGS << " -I#{ruby_bindings}"
 
-FileUtils.cp(bundle, ROOT)
+$CXXFLAGS << " -std=c++17"
+$LDFLAGS  << " #{libmarisa}"
 
-puts "✓ marisa extension built"
+CONFIG["CXX"] ||= "c++"
 
 # --------------------------------------------------
-# 4. SATISFY RUBYGEMS (dummy Makefile)
+# 4. create Makefile (ABSOLUTELY REQUIRED)
 # --------------------------------------------------
 
-File.write("Makefile", <<~MAKEFILE)
-all:
-\t@echo "marisa already built"
-
-install:
-\t@echo "marisa already installed"
-MAKEFILE
+create_makefile("marisa/marisa")
