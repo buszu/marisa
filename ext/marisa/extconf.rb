@@ -71,5 +71,7 @@ $CXXFLAGS << " -std=c++17"
 # --------------------------------------------------
 
 Dir.chdir(File.join(VENDOR, "bindings", "ruby")) do
+  puts "\n\n\nELO\n\n\n"
+  puts Dir.pwd
   load "extconf.rb"
 end
